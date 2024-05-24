@@ -5,12 +5,16 @@ def policy_evaluation_one_step(mdp, V, policy, discount=0.99):
     """ Computes one step of policy evaluation.
     Arguments: MDP, value function, policy, discount factor
     Returns: Value function of policy
+    policy[x][y] is the probability of action with y for state x.
+    mdp is GridworlsMDP shape : list of int
+    mdp.P[s][a] contains a list of tuples (p, s', r, is_terminal) with:
     """
     # Init value function array
-    V_new = V.copy()
-
-    # TODO: Write your implementation here
-    
+    V_new = init_value(mdp)
+    for state in range(mdp.num_states):
+        V_new[state] = sum(
+            policy[state][action] * sum(p * (r + discount * V[s_new]) for p, s_new, r, _ in mdp.P[state][action]) \
+            for action in range(mdp.num_actions))
     return V_new
 
 def policy_evaluation(mdp, policy, discount=0.99, theta=0.01):
