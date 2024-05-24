@@ -1,5 +1,4 @@
 import numpy as np
-
 from gridworld import GridWorldEnv
 from util import value_function_policy_plot
 
@@ -18,24 +17,30 @@ class TDAgent:
         # uniform random policy[y, x, z], i.e. probability of action z when in grid position y, x is 1 / num_actions
         self.policy = np.ones((*env.observation_space.high, self.num_actions), dtype=np.float32) / self.num_actions
 
-        # TODO 3: experiment with different (not fully random) policies
-
     def action(self, s):
-        # TODO 2: Sample action following the policy
-        return self.env.action_space.sample()  # random action
+        # Sample action following the policy
+        action_probabilities = self.policy[s[0], s[1]]
+        a = np.random.choice(np.arange(self.num_actions), p=action_probabilities)
+        return a
 
     def learn(self, n_timesteps=50000):
         s, _ = self.env.reset()
 
         for i in range(n_timesteps):
-            # TODO 1: Implement the agent-interaction loop
-            # You will have to call self.update(...) at every step
-            # Do not forget to reset the environment if you receive a 'terminated' signal
-            pass
+            a = self.action(s)
+            s_, r, done, _, _ = self.env.step(a)
+            if done:
+                s_, _ = self.env.reset()
+            self.update(s, r, s_)
+            s = s_
 
     def update(self, s, r, s_):
-        # TODO 1: Implement the TD estimation update rule
-        self.V[*s] = 0.0
+        # TD estimation update rule
+        self.V[s[0], s[1]] += self.lr * (r + self.g * self.V[s_[0], s_[1]] - self.V[s[0], s[1]])
+
+        # Policy update to be greedy with respect to the value function
+        best_action = np.argmax([self.V[s_[0], s_[1]] for _ in range(self.num_actions)])
+        self.policy[s[0], s[1]] = np.eye(self.num_actions)[best_action]
 
 
 if __name__ == "__main__":
