@@ -26,7 +26,12 @@ def policy_evaluation(mdp, policy, discount=0.99, theta=0.01):
     V = init_value(mdp)
 
     # TODO: Write your implementation here
-
+    delta = np.inf
+    while delta > theta:
+        delta = 0
+        V_new = policy_evaluation_one_step(mdp, V, policy, discount)
+        delta = max(delta, np.amax(np.abs(V_new - V)))
+        V = V_new
     return V
 
 def policy_improvement(mdp, V, discount=0.99):
@@ -36,9 +41,14 @@ def policy_improvement(mdp, V, discount=0.99):
     """
     # Initialize a policy array in which to save the greed policy 
     policy = np.zeros_like(random_policy(mdp))
+    policy_stable = True
 
     # TODO: Write your implementation here
-
+    for state in range(mdp.num_states):
+        max_action = np.argmax([sum(p * (r + discount * V[s_new]) for p, s_new, r, _ in mdp.P[state][action]) \
+                                   for action in range(mdp.num_actions)])
+        policy[state] = np.zeros(mdp.num_actions)
+        policy[state, max_action] = 1
     return policy
 
 
@@ -54,7 +64,14 @@ def policy_iteration(mdp, discount=0.99, theta=0.01):
     V = init_value(mdp)
 
     # TODO: Write your implementation here
-
+    policy_stable = False
+    while policy_stable == False:
+        V = policy_evaluation(mdp, policy, discount, theta)
+        policy_stable = True
+        new_policy = policy_improvement(mdp, V, discount)
+        if not np.array_equal(new_policy, policy):
+            policy_stable = False
+        policy = new_policy
     return V, policy
 
 def value_iteration(mdp, discount=0.99, theta=0.01):
@@ -62,13 +79,13 @@ def value_iteration(mdp, discount=0.99, theta=0.01):
     Arguments: MDP, discount factor, theta
     Returns: value function, policy
     """
-    # Init value function array
+    policy = random_policy(mdp)
+    # This is only here for the skeleton to run.
     V = init_value(mdp)
 
-    # TODO: Write your implementation here
+    V = policy_evaluation(mdp, policy, discount, theta)
 
-    # Get the greedy policy w.r.t the calculated value function
-    policy = policy_improvement(mdp, V)
+    policy = policy_improvement(mdp, V, discount)
     
     return V, policy
 
