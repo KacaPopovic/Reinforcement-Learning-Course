@@ -45,7 +45,10 @@ class GridWorldEnv(gym.Env):
         ]
 
         # TODO: Define your action_space and observation_space here
-
+        self.action_space = spaces.Discrete(4)
+        self.observation_space = spaces.Box(low = np.array([0,0]),
+                                            high = np.array([len(self.map[0])-1, len(self.map[0])-1]),
+                                            dtype=np.int32)
         self.agent_position = [0, 0]
 
     def reset(
@@ -55,16 +58,34 @@ class GridWorldEnv(gym.Env):
             options: Optional[dict] = None,
     ):
         super().reset(seed=seed)
-
-        # TODO: Write your implementation here
-
+        self.agent_position = [0, 0]
         return self._observe(), {}
 
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, bool, Dict[str, Any]]:
         reward = None
         done = None
         # TODO: Write your implementation here
+        if action == 0:
+            # Go up
+            self.agent_position[0] = clamp(self.agent_position[0] - 1, 0, len(self.map) - 1)
+        elif action == 1:  # Go right
+            self.agent_position[1] = clamp(self.agent_position[1] + 1, 0, len(self.map[0]) - 1)
+        elif action == 2:  # Go down
+            self.agent_position[0] = clamp(self.agent_position[0] + 1, 0, len(self.map) - 1)
+        elif action == 3:  # Go left
+            self.agent_position[1] = clamp(self.agent_position[1] - 1, 0, len(self.map[0]) - 1)
 
+        current_cell = self.map[self.agent_position[0]][self.agent_position[1]]
+
+        if current_cell == "g":
+            reward = 1
+            done = True
+        elif current_cell == "t":
+            reward = -1
+            done = True
+        else:
+            reward = 0
+            done = False
         observation = self._observe()
         return observation, reward, done, False, {}
 
